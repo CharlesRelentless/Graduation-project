@@ -1,0 +1,591 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>遥感地物提取操作手册 · 知识框架</title>
+  <style>
+    :root {
+      --bg: #f7f8fa; --card: #ffffff; --brand: #6366f1; --brand-soft: #e0e7ff;
+      --brand-deep: #4338ca; --text: #1f2937; --muted: #6b7280; --border: #e5e7eb;
+      --green: #16a34a; --green-soft: #dcfce7;
+      --amber: #f59e0b; --amber-soft: #fef3c7;
+      --red: #dc2626; --red-soft: #fee2e2;
+    }
+    * { box-sizing: border-box; }
+    body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", "Helvetica Neue", Arial, sans-serif; background: var(--bg); color: var(--text); line-height: 1.7; }
+    .container { max-width: 1080px; margin: 0 auto; padding: 32px 20px 80px; }
+    header.hero { background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%); color: #fff; border-radius: 16px; padding: 32px 28px; display: flex; gap: 28px; align-items: center; flex-wrap: wrap; }
+    .hero-icon { width: 88px; height: 88px; border-radius: 20px; background: rgba(255,255,255,0.18); display: flex; align-items: center; justify-content: center; font-size: 42px; flex-shrink: 0; }
+    .hero-info h1 { margin: 0 0 6px; font-size: 22px; font-weight: 700; }
+    .hero-info .meta { opacity: 0.88; font-size: 13px; margin-bottom: 12px; }
+    .hero-pills { display: flex; gap: 8px; flex-wrap: wrap; }
+    .hero-pill { display: inline-flex; align-items: center; gap: 5px; background: rgba(255,255,255,0.18); padding: 4px 12px; border-radius: 999px; font-size: 13px; }
+    .pill-icon { font-size: 14px; }
+    .ai-banner { border-radius: 10px; padding: 14px 18px; margin-top: 18px; border-left: 4px solid var(--amber); background: var(--amber-soft); color: #92400e; }
+    .ai-banner .ai-title { font-weight: 700; font-size: 15px; margin-bottom: 4px; }
+    .ai-banner .ai-note { font-size: 13px; line-height: 1.6; }
+    nav.toc { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 18px 24px; margin-top: 18px; }
+    nav.toc h2 { margin: 0 0 12px; font-size: 15px; color: var(--muted); font-weight: 600; letter-spacing: 0.05em; }
+    nav.toc ol { margin: 0; padding-left: 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 4px 24px; }
+    nav.toc li { font-size: 14px; }
+    nav.toc a { color: var(--brand-deep); text-decoration: none; }
+    nav.toc a:hover { text-decoration: underline; }
+    section.card { background: var(--card); border: 1px solid var(--border); border-radius: 12px; padding: 22px 24px; margin-top: 18px; scroll-margin-top: 20px; }
+    section.card > h2 { margin: 0 0 16px; font-size: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--brand-soft); color: var(--brand); display: flex; align-items: center; gap: 8px; }
+    section.card h3 { font-size: 15px; margin: 18px 0 8px; color: var(--text); }
+    details.tree-node { margin: 3px 0; }
+    details.tree-node > summary { cursor: pointer; padding: 5px 8px; border-radius: 6px; list-style: none; user-select: none; display: flex; align-items: center; gap: 6px; font-size: 14px; }
+    details.tree-node > summary::-webkit-details-marker { display: none; }
+    details.tree-node > summary::before { content: "\25B6"; font-size: 9px; color: var(--muted); transition: transform 0.15s; flex-shrink: 0; }
+    details.tree-node[open] > summary::before { transform: rotate(90deg); }
+    details.tree-node > summary:hover { background: var(--brand-soft); }
+    .node-title { font-weight: 500; }
+    .node-leaf { font-size: 13.5px; color: #374151; padding: 3px 8px 3px 24px; display: block; }
+    .tree-children { padding-left: 20px; border-left: 1px dashed var(--border); margin-left: 10px; }
+    .badge-star { font-size: 11px; padding: 1px 8px; border-radius: 999px; background: #fef9c3; color: #854d0e; margin-left: 6px; font-weight: 600; flex-shrink: 0; }
+    .expl-item { border: 1px solid var(--border); border-left: 4px solid var(--brand); border-radius: 8px; padding: 16px 18px; margin-bottom: 14px; background: #fafafa; }
+    .expl-title { font-weight: 700; font-size: 15px; color: var(--brand-deep); margin-bottom: 4px; }
+    .expl-path { font-size: 12px; color: var(--muted); margin-bottom: 10px; }
+    .expl-body { font-size: 14px; line-height: 1.8; }
+    .key-points { background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 10px 14px; margin-top: 12px; font-size: 13.5px; line-height: 1.7; }
+    .key-points strong { color: #166534; }
+    .deps-table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+    .deps-table th, .deps-table td { border: 1px solid var(--border); padding: 8px 10px; text-align: left; vertical-align: top; }
+    .deps-table th { background: var(--brand-soft); color: var(--brand-deep); font-weight: 600; }
+    .deps-table tr:nth-child(even) td { background: #fafafa; }
+    .dep-tag { display: inline-block; font-size: 11px; padding: 2px 8px; border-radius: 999px; font-weight: 600; white-space: nowrap; }
+    .dep-prerequisite   { background: #fee2e2; color: #991b1b; }
+    .dep-contrast       { background: #fef3c7; color: #92400e; }
+    .dep-specialization { background: #e0e7ff; color: #3730a3; }
+    .dep-application    { background: #dcfce7; color: #166534; }
+    .dep-generalization { background: #dbeafe; color: #1e40af; }
+    .dep-tool           { background: #f3e8ff; color: #6b21a8; }
+    .mermaid-wrap { background: #fafafa; border: 1px solid var(--border); border-radius: 8px; padding: 16px; overflow-x: auto; margin-top: 14px; }
+    pre.mermaid { margin: 0; font-family: Menlo, Consolas, monospace; font-size: 12px; white-space: pre; }
+    .qa-list { list-style: none; padding: 0; margin: 0; }
+    .qa-item { border: 1px solid var(--border); border-left: 4px solid var(--brand); border-radius: 8px; padding: 12px 16px; margin-bottom: 10px; background: #fafafa; display: flex; gap: 12px; align-items: flex-start; }
+    .qa-num { background: var(--brand); color: #fff; border-radius: 999px; font-size: 12px; padding: 2px 10px; flex-shrink: 0; margin-top: 2px; }
+    .qa-content .q-text { font-weight: 600; color: var(--brand-deep); font-size: 14px; }
+    .qa-content .q-why { color: var(--muted); font-size: 13px; margin-top: 3px; line-height: 1.6; }
+    footer { text-align: center; color: var(--muted); font-size: 12px; margin-top: 36px; line-height: 1.8; padding-top: 20px; border-top: 1px solid var(--border); }
+    @media print {
+      body { background: #fff; }
+      header.hero { background: #4338ca !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      nav.toc, .mermaid-wrap { break-inside: avoid; }
+      details.tree-node { break-inside: avoid; }
+      .expl-item, .qa-item { break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <header class="hero">
+    <div class="hero-icon">🧭</div>
+    <div class="hero-info">
+      <h1>遥感地物提取操作手册 · 知识框架</h1>
+      <div class="meta">生成时间：2026-05-23 13:50 · 基于 README.md（操作手册正文）</div>
+      <div class="hero-pills">
+        <span class="hero-pill"><span class="pill-icon">📄</span> 基于操作手册原文生成</span>
+        <span class="hero-pill"><span class="pill-icon">📊</span> 框架 + 重点讲解</span>
+        <span class="hero-pill"><span class="pill-icon">🔗</span> 含知识点关联图</span>
+      </div>
+    </div>
+  </header>
+
+  <div class="ai-banner" style="display:none">
+    <div class="ai-title">⚠️ 本框架由 AI 根据课程主题推断生成</div>
+    <div class="ai-note">未提供教材或笔记，所有知识点均为 AI 推断，可能存在遗漏或偏差。建议对照教材核实后使用。</div>
+  </div>
+
+  <nav class="toc" id="toc">
+    <h2>📋 目录</h2>
+    <ol>
+      <li><a href="#sec-framework">知识框架总览</a></li>
+      <li><a href="#sec-explain">重点知识讲解</a></li>
+      <li><a href="#sec-deps">知识点关联图</a></li>
+      <li><a href="#sec-next">延伸学习建议</a></li>
+    </ol>
+  </nav>
+
+  <!-- ══ 1. 知识框架 ══ -->
+  <section class="card" id="sec-framework">
+    <h2>📚 知识框架总览</h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 14px;">
+      点击任意节点可折叠/展开。标有 <span class="badge-star">⭐ 重点</span> 的节点有详细讲解，见下方第二节。
+    </p>
+    <div class="tree-root">
+
+<details class="tree-node" open>
+<summary><span class="node-title">一、研究基础与选题定向</span> <span class="badge-star">⭐ 重点</span></summary>
+<div class="tree-children">
+  <span class="node-leaf">1.1 核心理念：以终为始</span>
+  <span class="node-leaf">1.2 常见地物类型与光谱特征</span>
+  <details class="tree-node">
+  <summary><span class="node-title">1.3 研究区选择原则</span> <span class="badge-star">⭐ 重点</span></summary>
+  <div class="tree-children">
+    <span class="node-leaf">范围适中（单景影像覆盖）</span>
+    <span class="node-leaf">数据可得（时相/云量评估）</span>
+    <span class="node-leaf">验证可行（实测/解译/产品）</span>
+  </div>
+  </details>
+  <span class="node-leaf">1.4 遥感数据源与获取路径</span>
+  <span class="node-leaf">1.5 选题单提交模板</span>
+</div>
+</details>
+
+<details class="tree-node" open>
+<summary><span class="node-title">二、技术路线决策</span> <span class="badge-star">⭐ 重点</span></summary>
+<div class="tree-children">
+  <details class="tree-node">
+  <summary><span class="node-title">2.1 四条路径全景对比</span> <span class="badge-star">⭐ 重点</span></summary>
+  <div class="tree-children">
+    <span class="node-leaf">路径A0：简单监督分类（精度70-80%）</span>
+    <span class="node-leaf">路径A：特征工程 + 机器学习（精度85-90%）</span>
+    <span class="node-leaf">路径B：深度学习语义分割（精度90-95%）</span>
+    <span class="node-leaf">路径C：时序分析/变化检测</span>
+  </div>
+  </details>
+  <span class="node-leaf">2.2 决策树：路径选择逻辑</span>
+  <span class="node-leaf">2.3 路径-论文章节映射关系</span>
+</div>
+</details>
+
+<details class="tree-node" open>
+<summary><span class="node-title">三、数据预处理方法</span> <span class="badge-star">⭐ 重点</span></summary>
+<div class="tree-children">
+  <details class="tree-node">
+  <summary><span class="node-title">3.1 通用光学影像预处理</span></summary>
+  <div class="tree-children">
+    <span class="node-leaf">辐射定标（DN → 辐亮度）</span>
+    <span class="node-leaf">大气校正（辐亮度 → 地表反射率）<span class="badge-star">⭐ 重点</span></span>
+    <span class="node-leaf">几何精校正与去云</span>
+    <span class="node-leaf">研究区裁剪</span>
+  </div>
+  </details>
+  <details class="tree-node">
+  <summary><span class="node-title">3.2 雷达数据专项预处理</span> <span class="badge-star">⭐ 重点</span></summary>
+  <div class="tree-children">
+    <span class="node-leaf">轨道校正与热噪声去除</span>
+    <span class="node-leaf">辐射定标与斑点滤波（Refined Lee）</span>
+    <span class="node-leaf">地形校正（SRTM DEM）与地理编码</span>
+  </div>
+  </details>
+  <details class="tree-node">
+  <summary>3.3 深度学习数据准备</summary>
+  <div class="tree-children">
+    <span class="node-leaf">像素级标签制作</span>
+    <span class="node-leaf">样本切片（256×256）</span>
+    <span class="node-leaf">数据增强策略</span>
+  </div>
+  </details>
+</div>
+</details>
+
+<details class="tree-node" open>
+<summary><span class="node-title">四、分析方法（按路径执行）</span> <span class="badge-star">⭐ 重点</span></summary>
+<div class="tree-children">
+  <details class="tree-node">
+  <summary>4.1 路径A0：简单监督分类</summary>
+  <div class="tree-children">
+    <span class="node-leaf">最大似然法执行流程</span>
+    <span class="node-leaf">混淆矩阵精度评价</span>
+  </div>
+  </details>
+  <details class="tree-node">
+  <summary>4.2 路径A：特征工程 + 机器学习</summary>
+  <div class="tree-children">
+    <span class="node-leaf">光谱指数构建（NDVI/NDWI/NDBI）<span class="badge-star">⭐ 重点</span></span>
+    <span class="node-leaf">纹理特征提取（GLCM）</span>
+    <span class="node-leaf">特征选择与重要性评估</span>
+    <span class="node-leaf">分类器选择（随机森林/SVM）</span>
+  </div>
+  </details>
+  <details class="tree-node">
+  <summary>4.3 路径B：深度学习语义分割 <span class="badge-star">⭐ 重点</span></summary>
+  <div class="tree-children">
+    <span class="node-leaf">模型架构选型（U-Net/DeepLabV3+）</span>
+    <span class="node-leaf">损失函数与优化器配置</span>
+    <span class="node-leaf">训练策略与早停机制</span>
+    <span class="node-leaf">滑动窗口预测与后处理</span>
+  </div>
+  </details>
+  <details class="tree-node">
+  <summary>4.4 路径C：时序变化检测 <span class="badge-star">⭐ 重点</span></summary>
+  <div class="tree-children">
+    <span class="node-leaf">变化检测方法（差值法/分类后比较）</span>
+    <span class="node-leaf">动态度与转移矩阵分析</span>
+    <span class="node-leaf">驱动力分析（地理探测器/逻辑回归）</span>
+  </div>
+  </details>
+</div>
+</details>
+
+<details class="tree-node" open>
+<summary><span class="node-title">五、质量保障与论文产出</span> <span class="badge-star">⭐ 重点</span></summary>
+<div class="tree-children">
+  <span class="node-leaf">5.1 样本质量检查清单</span>
+  <details class="tree-node">
+  <summary>5.2 精度评价指标与达标标准 <span class="badge-star">⭐ 重点</span></summary>
+  <div class="tree-children">
+    <span class="node-leaf">混淆矩阵（基础）</span>
+    <span class="node-leaf">总体精度（>85%）与 Kappa（>0.7）</span>
+    <span class="node-leaf">生产者精度 / 用户精度</span>
+  </div>
+  </details>
+  <span class="node-leaf">5.3 结果可信度验证</span>
+  <span class="node-leaf">5.4 论文章节模板与必备图表</span>
+</div>
+</details>
+
+    </div>
+  </section>
+
+  <!-- ══ 2. 重点知识讲解 ══ -->
+  <section class="card" id="sec-explain">
+    <h2>🔑 重点知识讲解</h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 16px;">
+      以下知识点是本框架中最核心、最容易混淆或最有备考价值的部分，每条均附核心要点总结。
+    </p>
+
+    <!-- ① 四条技术路径全景对比 -->
+    <div class="expl-item">
+      <div class="expl-title">① 四条技术路径全景对比（技术路线决策核心）</div>
+      <div class="expl-path">📍 二、技术路线决策 → 2.1 四条路径全景对比</div>
+      <div class="expl-body">
+        <p>遥感地物提取的四种技术路线构成了从「入门」到「前沿」的完整技术梯度。理解这四条路径的差异，是整篇毕业论文设计的第一步，也是最关键的一步。</p>
+        <p><strong>路径A0（简单监督分类）</strong>是基础方法，依靠影像光谱信息，使用最大似然法等统计分类器直接对像元分类。核心优势在于速度快、门槛低，但精度上限约 70-80%，适用于对精度要求不高的本科毕设或快速摸底。好比用一把尺子量长度——简单直接，但精度有限。</p>
+        <p><strong>路径A（传统机器学习）</strong>引入了「特征工程」的概念：不只用原始波段，还人工构造 NDVI/NDWI 等光谱指数和 GLCM 纹理特征，再用随机森林或 SVM 分类。这相当于给分类器配了一副「眼镜」——让它看到更多维度的信息。精度可提升至 85-90%，是多数场景下的稳健选择。</p>
+        <p><strong>路径B（深度学习语义分割）</strong>实现了「端到端」学习，模型自己学会从影像中提取特征，省去了人工特征工程。U-Net、DeepLabV3+ 等架构在复杂场景下精度可达 90-95%。但代价是需要大量像素级标注样本（至少 500 张有效切片）和充足的计算资源。好比请了一位「专家」来干活——能力强，但培养成本高。</p>
+        <p><strong>路径C（时序变化检测）</strong>解决的是「变化」问题而非「状态」问题。需要至少两期影像，通过差值法或分类后比较法检测变化区域，再用转移矩阵和地理探测器分析变化的驱动力。这条路在城市扩张、灾害评估研究中不可替代。</p>
+        <p>选择的关键判断标准：只有一期影像 → A0/A/B；有多期影像且关注变化 → C；精度要求高且样本充足 → B；时间紧样本少 → A0/A。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>四条路径构成从低到高的技术梯度：A0（低精度/低投入）→ A（中精度/中投入）→ B（高精度/高投入），C 是独立的时序维度</li>
+          <li>路径选择的核心依据：数据特征（单期/多期）+ 精度需求 + 可用资源（样本量/算力）</li>
+          <li>路径 B 和 C 不互斥，可在变化检测中嵌入深度学习分类器</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ② 大气校正 -->
+    <div class="expl-item">
+      <div class="expl-title">② 大气校正：数据预处理的最关键环节</div>
+      <div class="expl-path">📍 三、数据预处理方法 → 3.1 通用光学影像预处理 → 大气校正</div>
+      <div class="expl-body">
+        <p>大气校正（Atmospheric Correction）是将遥感影像从「传感器接收到的辐亮度」转换为「地表真实反射率」的过程。这个步骤在手册中被标注为 <strong>⚠️ 必须做</strong>，因为它直接决定了所有后续分析的物理准确性。</p>
+        <p>为什么如此关键？遥感卫星接收到的信号经历了「太阳→大气→地表→大气→传感器」的双程路径，大气中的水汽、气溶胶、瑞利散射都会扭曲信号。不校正意味着你在分析「被大气污染的影像」而非「真实的地表」。</p>
+        <p><strong>对 A0/A 路径：</strong>NDVI/NDWI 等光谱指数依赖真实反射率计算。大气散射会使 NDVI 值偏低（近红外波段被散射更严重），不校正可能导致植被被误判为裸地。</p>
+        <p><strong>对 B 路径：</strong>深度学习模型虽然能从数据中学习一定的校正能力，但如果训练集和测试集的大气条件不一致，模型泛化能力会严重下降。</p>
+        <p><strong>对 C 路径：</strong>多时相分析中，大气伪变化可能占总变化信号的 50% 以上——不做大气校正的多时相对比基本没有意义。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>大气校正是从「传感器信号」到「地表真实」的桥梁，直接决定光谱指数的物理意义</li>
+          <li>多时相分析中不做大气校正会导致严重的大气伪变化，占比可达 50% 以上</li>
+          <li>检验标准：校正后水体近红外反射率应 &lt; 0.1，植被近红外 &gt; 0.3，光谱曲线符合常识</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ③ 深度学习语义分割 -->
+    <div class="expl-item">
+      <div class="expl-title">③ 深度学习语义分割：端到端学习的完整链路</div>
+      <div class="expl-path">📍 四、分析方法 → 4.3 路径B：深度学习语义分割</div>
+      <div class="expl-body">
+        <p>深度学习语义分割是四条路径中精度上限最高的一条。它颠覆了传统遥感分类「人工设计特征 → 分类器分类」的两步范式，改为「输入影像 → 模型自动提取特征 → 输出分割图」的端到端学习。</p>
+        <p><strong>数据准备（最耗时，占 40% 工作量）</strong>：像素级标注后，切成 256×256 或 512×512 的小图块（patch），配合旋转、翻转、亮度调整等数据增强防止过拟合。</p>
+        <p><strong>模型选型：</strong>U-Net 是首选基线，编码器-解码器 + 跳跃连接保留空间细节；DeepLabV3+ 通过 ASPP 多尺度捕获特征，边界更精细。</p>
+        <p><strong>训练策略：</strong>关键参数——损失函数（交叉熵/Dice Loss）、优化器（Adam，学习率 0.0001）、训练轮数（50-100 轮 + 早停）。</p>
+        <p><strong>预测与后处理：</strong>滑动窗口分块预测再拼接，可选 CRF 后处理优化边界。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>标签质量决定模型上限——垃圾标注必然导致垃圾模型</li>
+          <li>样本量至少 500 张有效切片，类别分布要均匀</li>
+          <li>数据量小时用 U-Net，数据量大时可挑战 DeepLabV3+</li>
+          <li>不收敛排查顺序：检查归一化 → 降低学习率 → 检查标签质量 → 简化模型架构</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ④ 时序变化检测 -->
+    <div class="expl-item">
+      <div class="expl-title">④ 时序变化检测：转移矩阵 + 驱动力分析的双核体系</div>
+      <div class="expl-path">📍 四、分析方法 → 4.4 路径C：时序变化检测</div>
+      <div class="expl-body">
+        <p>时序变化检测由「变化检测 → 变化量化 → 驱动力归因」三层递进。</p>
+        <p><strong>变化检测方法：</strong>差值法最快但只回答「变没变」；分类后比较法能回答「从什么变成了什么」，对毕业论文最为推荐。</p>
+        <p><strong>转移矩阵</strong>是时序分析的「必修课」。揭示各地类之间的相互转化关系。动态度 K = (Ub - Ua) / Ua × 1/T × 100% 是必算指标。桑基图（Sankey Diagram）是最直观的可视化方式。</p>
+        <p><strong>地理探测器（Geodetector）</strong>是近年 LUCC 研究中最热门的方法：q 统计量量化每个驱动因子的空间分异解释力；交互探测识别双因子协同效应——绝大多数自然-人文因子交互表现为「非线性增强」或「双因子增强」。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>时序分析的「三件套」：多期影像精确配准 → 辐射归一化 → 分类后比较</li>
+          <li>转移矩阵是时序分析的核心产出，桑基图是最佳可视化方式</li>
+          <li>地理探测器 q 值是当前 LUCC 驱动力研究的标准指标</li>
+          <li>配准误差 &gt; 1 像素会导致大量「配准伪变化」——这是时序分析最常见的陷阱</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ⑤ 精度评价体系 -->
+    <div class="expl-item">
+      <div class="expl-title">⑤ 精度评价体系：从混淆矩阵到多维指标</div>
+      <div class="expl-path">📍 五、质量保障与论文产出 → 5.2 精度评价指标与达标标准</div>
+      <div class="expl-body">
+        <p>精度评价需要从多个维度审视分析结果质量。</p>
+        <p><strong>混淆矩阵是基础。</strong>列出每个类别的正确分类数和错误分类数，揭示哪些类别之间容易混淆。</p>
+        <p><strong>多维指标各有用处：</strong>总体精度是最宏观指标；Kappa 系数矫正随机一致性；生产者精度（漏分率）——某类别中被正确识别的比例；用户精度（错分率）——被识别为某类的像素中真正属于该类的比例。</p>
+        <p><strong>硬性达标标准：</strong>总体精度 &gt; 85%，Kappa &gt; 0.7，主要地物精度 &gt; 80%。不达标时排查顺序：增加样本 → 增加特征 → 合并易混类别 → 换方法。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>混淆矩阵是精度评价的唯一数据基础，所有指标都由它衍生</li>
+          <li>生产者精度 = 漏分率，用户精度 = 错分率，两者常呈反比关系</li>
+          <li>总体精度高不代表所有类别都好，必须逐类校验</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ⑥ 研究区选择 -->
+    <div class="expl-item">
+      <div class="expl-title">⑥ 研究区选择：决定论文可行性的第一关口</div>
+      <div class="expl-path">📍 一、研究基础与选题定向 → 1.3 研究区选择原则</div>
+      <div class="expl-body">
+        <p>研究区的选择是决定整篇论文能否顺利完成的「第一决策」。手册给出三个关键原则：</p>
+        <p><strong>范围适中：</strong>以单景遥感影像（Landsat 185×185 km、Sentinel-2 100×100 km）覆盖范围为宜。太大处理不动，太小没有学术意义。</p>
+        <p><strong>数据可得：</strong>需确认有对应时相的清晰影像。南方多云地区一年可能只有 2-3 景无云影像，热带雨林常年有云。GEE 是快速检查的最佳工具。</p>
+        <p><strong>验证可行：</strong>验证数据可靠度排序——野外实测 &gt; 高分辨率影像解译 &gt; 已有分类产品采样。完全无法获取验证数据的论文可信度会大打折扣。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>最佳研究区范围 = 单景遥感影像覆盖范围（约 100-200 km 边长）</li>
+          <li>验证数据的可获得性往往比分析方法的先进性更重要</li>
+          <li>多云地区需评估可用影像数量，必要时改用雷达数据</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ⑦ 光谱指数 -->
+    <div class="expl-item">
+      <div class="expl-title">⑦ 光谱指数：连接原始波段与分析目标的桥梁</div>
+      <div class="expl-path">📍 四、分析方法 → 4.2 路径A：特征工程 + 机器学习 → 光谱指数构建</div>
+      <div class="expl-body">
+        <p>光谱指数的核心思想：不同地物在不同波段上的反射率差异不同，通过波段运算放大这些差异。</p>
+        <p><strong>六大核心指数速查：</strong>NDVI = (NIR-Red)/(NIR+Red) 植被；NDWI = (Green-NIR)/(Green+NIR) 水体；NDBI = (SWIR-NIR)/(SWIR+NIR) 建设用地；MNDWI 在城镇水体中优于 NDWI；SAVI 适用于稀疏植被；EVI 适用于茂密植被。</p>
+        <p>选择原则是「按目标地物匹配」：水体用 NDWI/MNDWI，植被用 NDVI/SAVI/EVI，建设用地用 NDBI。切勿盲目把所有指数都加上——需要配合特征重要性评估做筛选。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>光谱指数本质是波段间比值运算，通过归一化消除部分光照和地形影响</li>
+          <li>各指数有明确适用场景和局限性，MNDWI 在城市水体提取中优于 NDWI</li>
+          <li>特征工程核心原则：先按地物类型选对指数，再通过特征重要性做精筛</li>
+        </ol>
+      </div>
+    </div>
+
+    <!-- ⑧ 雷达数据 -->
+    <div class="expl-item">
+      <div class="expl-title">⑧ 雷达数据：突破光学影像限制的特殊通道</div>
+      <div class="expl-path">📍 三、数据预处理方法 → 3.2 雷达数据专项预处理</div>
+      <div class="expl-body">
+        <p>雷达（SAR）影像是遥感地物提取中的「特殊武器」。它主动发射微波、不受云层和光照限制——这是它在多云地区和夜间观测中的不可替代优势。</p>
+        <p><strong>核心物理量——后向散射系数（Sigma0）：</strong>平滑表面（如静水）呈镜面反射，回波极弱（VV &lt; -15 dB）；粗糙表面或建筑物角反射回波强。水体提取是 SAR 最简单的应用场景。</p>
+        <p><strong>预处理 6 步：</strong>轨道校正 → 热噪声去除 → 辐射定标 → 斑点滤波（Refined Lee，5×5）→ 地形校正（SRTM DEM）→ 地理编码。斑点滤波和地形校正是 SAR 独有的必要步骤。</p>
+      </div>
+      <div class="key-points">
+        <strong>📌 核心要点：</strong>
+        <ol style="margin:6px 0 0;padding-left:18px;">
+          <li>SAR 不受云和光照限制，是多云/热带地区和灾害应急监测的首选数据源</li>
+          <li>水体在 SAR 影像上呈低后向散射特征（VV &lt; -15 dB），提取最为简单</li>
+          <li>斑点滤波和地形校正是 SAR 预处理的独特必要步骤，不能跳过</li>
+        </ol>
+      </div>
+    </div>
+
+  </section>
+
+  <!-- ══ 3. 知识点关联图 ══ -->
+  <section class="card" id="sec-deps">
+    <h2>🔗 知识点关联图</h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 14px;">
+      下表梳理了各知识点之间的前置关系、对比关系和应用关系，帮助你理解「学什么才能做好什么」。
+    </p>
+    <table class="deps-table">
+      <thead>
+        <tr><th style="width:90px;">关系类型</th><th>知识点 A</th><th>知识点 B</th><th>关联说明</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><span class="dep-tag dep-prerequisite">前置条件</span></td>
+          <td>大气校正</td><td>光谱指数计算（NDVI/NDWI）</td>
+          <td>光谱指数依赖地表真实反射率；不做大气校正直接计算 NDVI，结果将偏离真实值</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-prerequisite">前置条件</span></td>
+          <td>辐射定标</td><td>大气校正</td>
+          <td>大气校正的输入必须是 TOA 辐亮度（辐射定标产物），不可直接用 DN 值做大气校正</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-prerequisite">前置条件</span></td>
+          <td>像素级标签制作</td><td>深度学习语义分割训练</td>
+          <td>深度学习模型需要标注好的标签作为监督信号；标签质量直接决定模型精度上限</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-prerequisite">前置条件</span></td>
+          <td>几何精校正</td><td>时序变化检测</td>
+          <td>多期影像必须像素级对齐（误差 < 1 像素），否则会产生大量配准伪变化</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-prerequisite">前置条件</span></td>
+          <td>辐射归一化</td><td>多期影像变化检测</td>
+          <td>季节和太阳高度角差异会引起辐射畸变；不做辐射归一化，差值法结果含大量辐射伪变化</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-contrast">对比关系</span></td>
+          <td>路径A（传统机器学习）</td><td>路径B（深度学习语义分割）</td>
+          <td>A 需人工设计特征、样本量低（50-100/类）；B 端到端自动提取特征、需大量像素级标注（500+ 切片）。精度 B>A，门槛 A<B</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-contrast">对比关系</span></td>
+          <td>U-Net</td><td>DeepLabV3+</td>
+          <td>U-Net 对中小数据集友好；DeepLabV3+ 多尺度特征、边界更精细但计算成本高。数据量小优先 U-Net</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-contrast">对比关系</span></td>
+          <td>随机森林</td><td>SVM</td>
+          <td>随机森林鲁棒性强、可输出特征重要性；SVM 小样本效果好，样本量 < 50/类时可能更优</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-contrast">对比关系</span></td>
+          <td>NDWI</td><td>MNDWI</td>
+          <td>MNDWI 用 SWIR 替换 NIR，在城市区域能更好区分建筑物和水体</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-contrast">对比关系</span></td>
+          <td>差值法</td><td>分类后比较法</td>
+          <td>差值法快但不能判断转换类型；分类后比较法能输出转移矩阵。毕业论文推荐后者</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-application">应用关系</span></td>
+          <td>转移矩阵</td><td>土地利用变化分析</td>
+          <td>转移矩阵是量化土地利用类型转换的核心工具，能揭示各类别「来源-去向」关系</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-application">应用关系</span></td>
+          <td>地理探测器（Geodetector）</td><td>驱动力分析</td>
+          <td>q 统计量评估各因子空间分异解释力，交互探测识别双因子协同效应</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-specialization">细化关系</span></td>
+          <td>精度评价体系</td><td>混淆矩阵</td>
+          <td>混淆矩阵是精度评价的基础产出，从中衍生总体精度、Kappa、生产者/用户精度等所有指标</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-tool">工具关系</span></td>
+          <td>ENVI</td><td>大气校正（FLAASH）</td>
+          <td>ENVI FLAASH 模块是遥感领域最常用的大气校正工具，支持多种传感器</td>
+        </tr>
+        <tr>
+          <td><span class="dep-tag dep-tool">工具关系</span></td>
+          <td>QGIS</td><td>数据预处理与制图</td>
+          <td>QGIS 免费开源，支持辐射定标插件、矢量叠加、专题图制作，是入门操作的理想平台</td>
+        </tr>
+      </tbody>
+    </table>
+    <h3>关联图（可视化）</h3>
+    <div class="mermaid-wrap">
+      <pre class="mermaid">graph LR
+  大气校正 -->|前置条件| NDVI["NDVI/NDWI计算"]
+  辐射定标 -->|前置条件| 大气校正
+  像素级标签 -->|前置条件| DL训练["深度学习训练"]
+  几何精校正 -->|前置条件| 时序检测["时序变化检测"]
+  辐射归一化 -->|前置条件| 多期对比["多期影像对比"]
+
+  路径A["路径A 传统ML"] -->|对比| 路径B["路径B 深度学习"]
+  U-Net -->|对比| DeepLabV3+
+  随机森林 -->|对比| SVM
+  NDWI -->|对比| MNDWI
+  差值法 -->|对比| 分类后比较
+
+  转移矩阵 -->|应用| 土地利用变化["土地利用变化分析"]
+  Geodetector["地理探测器"] -->|应用| 驱动力分析
+
+  精度评价 -->|细化| 混淆矩阵
+  ENVI -->|工具| FLAASH["FLAASH大气校正"]
+  QGIS -->|工具| 数据预处理["数据预处理与制图"]</pre>
+    </div>
+  </section>
+
+  <!-- ══ 4. 延伸学习建议 ══ -->
+  <section class="card" id="sec-next">
+    <h2>💡 延伸学习建议</h2>
+    <p style="color:var(--muted);font-size:13px;margin:0 0 14px;">
+      基于本框架，以下方向是性价比最高的深入学习切入点。
+    </p>
+    <ul class="qa-list">
+      <li class="qa-item">
+        <span class="qa-num">1</span>
+        <div class="qa-content">
+          <div class="q-text">深度学习语义分割 vs 传统机器学习的精度对比实验设计</div>
+          <div class="q-why">这是遥感论文中最经典的对比实验范式，结合手册中的路径 A 和 B，设计「相同数据 + 不同方法」的对比方案，可直接作为毕业论文的核心章节。</div>
+        </div>
+      </li>
+      <li class="qa-item">
+        <span class="qa-num">2</span>
+        <div class="qa-content">
+          <div class="q-text">地理探测器（Geodetector）的完整使用教程与 R/Python 实现</div>
+          <div class="q-why">地理探测器是路径 C 驱动力分析的核心工具，手册已给出公式框架，但实操层面（数据离散化、q 值显著性检验、交互探测可视化）需要额外教程支撑才能落地。</div>
+        </div>
+      </li>
+      <li class="qa-item">
+        <span class="qa-num">3</span>
+        <div class="qa-content">
+          <div class="q-text">遥感影像云去除（Cloud Removal）方法的最新进展</div>
+          <div class="q-why">手册 FAQ 提到了去云处理但未展开。云覆盖是遥感分析最常见的阻碍，Fmask、Sen2Cor 以及深度学习去云方法（如 SpA-GAN）均值得了解。</div>
+        </div>
+      </li>
+      <li class="qa-item">
+        <span class="qa-num">4</span>
+        <div class="qa-content">
+          <div class="q-text">从「操作手册」到「自动化脚本」：Python + GEE 遥感处理流水线</div>
+          <div class="q-why">手册中大量 ENVI/QGIS 手动操作可用 Python（rasterio/gdal）和 GEE 自动化，大幅提升效率。对批量实验和参数调优尤其重要。</div>
+        </div>
+      </li>
+      <li class="qa-item">
+        <span class="qa-num">5</span>
+        <div class="qa-content">
+          <div class="q-text">基于 SAM（Segment Anything Model）的遥感地物零样本分割探索</div>
+          <div class="q-why">Meta 的 SAM 模型展现了强大的通用分割能力，遥感领域 SAM-EO、RSPrompter 等变体正在兴起。了解这一前沿方向可扩展论文的创新角度。</div>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <footer>
+    由 <strong>knowledge-framework-builder</strong> Skill 生成 · 基于 README.md（操作手册正文）<br>
+    AI 生成的知识框架可能存在遗漏或推断误差，建议核对教材后使用。
+  </footer>
+
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"
+  onerror="document.querySelectorAll('.mermaid').forEach(e=>e.style.color='#6b7280');">
+</script>
+<script>
+  if (window.mermaid) {
+    mermaid.initialize({ startOnLoad: true, theme: 'default', flowchart: { curve: 'basis' } });
+  }
+</script>
+</body>
+</html>

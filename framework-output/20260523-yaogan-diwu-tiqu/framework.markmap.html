@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>遥感地物提取操作手册 · 思维导图</title>
+<style>
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: -apple-system, BlinkMacSystemFont, "PingFang SC", "Microsoft YaHei", sans-serif; }
+  #mindmap { width: 100vw; height: 100vh; }
+  svg { width: 100%; height: 100%; }
+  .fallback { display: none; padding: 40px; color: #6b7280; }
+</style>
+</head>
+<body>
+<div id="mindmap"></div>
+<div class="fallback" id="fallback">
+  <h2>⚠️ Markmap CDN 加载失败</h2>
+  <p>请检查网络连接后刷新页面，或查看 framework.md 获取完整框架。</p>
+  <pre style="background:#f3f4f6;padding:16px;border-radius:8px;margin-top:16px;white-space:pre-wrap;font-size:13px;">
+遥感地物提取操作手册
+├─ 一、研究基础与选题定向 ⭐
+│  ├─ 1.1 核心理念：以终为始
+│  ├─ 1.2 常见地物类型与光谱特征
+│  ├─ 1.3 研究区选择原则 ⭐
+│  ├─ 1.4 遥感数据源与获取路径
+│  └─ 1.5 选题单提交模板
+├─ 二、技术路线决策 ⭐
+│  ├─ 2.1 四条路径全景对比 ⭐
+│  │  ├─ 路径A0：简单监督分类
+│  │  ├─ 路径A：特征工程 + ML
+│  │  ├─ 路径B：深度学习语义分割
+│  │  └─ 路径C：时序变化检测
+│  ├─ 2.2 决策树：路径选择逻辑
+│  └─ 2.3 路径-论文章节映射
+├─ 三、数据预处理方法 ⭐
+│  ├─ 3.1 通用光学影像预处理
+│  │  ├─ 辐射定标
+│  │  ├─ 大气校正 ⭐
+│  │  ├─ 几何校正与去云
+│  │  └─ 研究区裁剪
+│  ├─ 3.2 雷达数据专项预处理 ⭐
+│  └─ 3.3 深度学习数据准备
+├─ 四、分析方法（按路径执行）⭐
+│  ├─ 4.1 A0：简单监督分类
+│  ├─ 4.2 A：特征工程 + 机器学习
+│  ├─ 4.3 B：深度学习语义分割 ⭐
+│  └─ 4.4 C：时序变化检测 ⭐
+└─ 五、质量保障与论文产出 ⭐
+   ├─ 5.1 样本质量检查
+   ├─ 5.2 精度评价体系 ⭐
+   ├─ 5.3 结果可信度验证
+   └─ 5.4 论文章节模板
+  </pre>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/d3@7"></script>
+<script src="https://cdn.jsdelivr.net/npm/markmap-view@0.16"></script>
+<script>
+(function() {
+  var cdnOk = typeof d3 !== 'undefined' && typeof markmap !== 'undefined';
+  if (!cdnOk) {
+    document.getElementById('mindmap').style.display = 'none';
+    document.getElementById('fallback').style.display = 'block';
+    return;
+  }
+
+  var markdown = `# 遥感地物提取操作手册
+
+## 一、研究基础与选题定向 ⭐
+### 1.1 核心理念：以终为始
+### 1.2 常见地物类型与光谱特征
+### 1.3 研究区选择原则 ⭐
+#### 范围适中
+#### 数据可得
+#### 验证可行
+### 1.4 遥感数据源与获取路径
+### 1.5 选题单提交模板
+
+## 二、技术路线决策 ⭐
+### 2.1 四条路径全景对比 ⭐
+#### 路径A0：简单监督分类（70-80%）
+#### 路径A：特征工程 + ML（85-90%）
+#### 路径B：深度学习语义分割（90-95%）
+#### 路径C：时序变化检测
+### 2.2 决策树：路径选择逻辑
+### 2.3 路径-论文章节映射
+
+## 三、数据预处理方法 ⭐
+### 3.1 通用光学影像预处理
+#### 辐射定标（DN→辐亮度）
+#### 大气校正（辐亮度→反射率）⭐
+#### 几何精校正与去云
+#### 研究区裁剪
+### 3.2 雷达数据专项预处理 ⭐
+#### 轨道校正+热噪声
+#### 斑点滤波（Refined Lee）
+#### 地形校正+地理编码
+### 3.3 深度学习数据准备
+#### 像素级标签
+#### 256×256切片
+#### 数据增强
+
+## 四、分析方法（按路径执行）⭐
+### 4.1 A0：简单监督分类
+#### 最大似然法
+#### 混淆矩阵评价
+### 4.2 A：特征工程 + 机器学习
+#### NDVI/NDWI/NDBI构建 ⭐
+#### GLCM纹理提取
+#### 特征选择
+#### 随机森林/SVM
+### 4.3 B：深度学习语义分割 ⭐
+#### U-Net/DeepLabV3+选型
+#### Dice Loss + Adam
+#### 训练+早停
+#### 滑动窗口预测
+### 4.4 C：时序变化检测 ⭐
+#### 差值/分类后比较
+#### 转移矩阵+动态度
+#### 地理探测器驱动力
+
+## 五、质量保障与论文产出 ⭐
+### 5.1 样本质量检查
+### 5.2 精度评价体系 ⭐
+#### 混淆矩阵
+#### 总体精度>85% Kappa>0.7
+#### 生产者/用户精度
+### 5.3 结果可信度验证
+### 5.4 论文章节模板+必备图表`;
+
+  var transformer = new markmap.Transformer();
+  var { root } = transformer.transform(markdown);
+  var { Markmap } = markmap;
+  var mm = Markmap.create('#mindmap', {
+    autoFit: true,
+    colorFreezeLevel: 2,
+    duration: 500,
+    maxWidth: 320,
+    initialExpandLevel: 2
+  }, root);
+
+  window.addEventListener('resize', function() { mm.fit(); });
+})();
+</script>
+</body>
+</html>
